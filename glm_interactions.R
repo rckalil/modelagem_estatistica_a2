@@ -10,22 +10,25 @@ variaveis_selecionadas <- read.csv("variaveis_selecionadas.csv")
 # Converter o dataframe em um vetor de variáveis
 selected_vars <- as.vector(variaveis_selecionadas$Variaveis)
 
+# Certificar que a variável dependente é binária
+data$Sucesso <- as.factor(data$Sucesso)
+
 # Exibir as variáveis selecionadas
 print("Variáveis selecionadas para o modelo final:")
 print(selected_vars)
 
 # Criar o modelo com as variáveis selecionadas
-final_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data=data)
+final_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data = data, family = binomial)
 summary(final_model)
 
 # Função para avaliar interações e retornar o AIC
 evaluate_interactions <- function(selected_vars, var_index, allowed_vars) {
-  aic_values = list()
-  var = selected_vars[var_index]
+  aic_values <- list()
+  var <- selected_vars[var_index]
   for (i in seq_along(allowed_vars)) {
     if (!(allowed_vars[i] %in% selected_vars)) {  # Garantir que a variável não seja considerada em selected_vars
       formula <- as.formula(paste("Sucesso ~", paste(selected_vars[-var_index], collapse = " + "), "+", var, "*", allowed_vars[i]))
-      model <- glm(formula, data=data)
+      model <- glm(formula, data = data, family = binomial)
       aic_values[[allowed_vars[i]]] <- AIC(model)
     }
   }
@@ -35,7 +38,7 @@ evaluate_interactions <- function(selected_vars, var_index, allowed_vars) {
 # Iterar sobre cada variável já incluída no modelo
 print("Variáveis iniciais")
 print(selected_vars)
-new_vars = selected_vars
+new_vars <- selected_vars
 for (variable in seq_along(selected_vars)) {
   # Obter os valores de AIC para as interações possíveis
   aic_values <- evaluate_interactions(selected_vars, variable, allowed_vars)
@@ -50,24 +53,28 @@ for (variable in seq_along(selected_vars)) {
     
     if (best_aic < current_aic) {
       # Adicionar a melhor interação ao modelo
-      interaction_formula <- as.formula(paste("Sucesso ~", paste(selected_vars[-variable], collapse = " + "), "+", selected_vars[variable], "*", best_interaction))
-      final_model <- glm(interaction_formula, data=data)
+      interaction_formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "), "+", selected_vars[variable], "*", best_interaction))
+      final_model <- glm(interaction_formula, data = data, family = binomial)
       
       # Adicionar a interação à lista de variáveis selecionadas
-      new_vars <- c(selected_vars[-variable], paste(selected_vars[variable], best_interaction, sep="*"))
+      selected_vars <- c(selected_vars, paste(selected_vars[variable], best_interaction, sep = "*"))
       
       print(paste("Interação adicionada:", selected_vars[variable], "*", best_interaction))
     }
   }
 }
-print("Variaveis ao final")
-print(new_vars)
+print("Variáveis ao final")
+print(selected_vars)
 
 # Exibir o modelo final
 summary(final_model)
 print(interaction_formula)
+
 # Salvar as variáveis selecionadas e interações em um arquivo CSV
 write.csv(data.frame(Variaveis = new_vars), "variaveis_selecionadas_com_interacoes.csv", row.names = FALSE)
 
-plot(data$Maravilha*data$Ciência, data$Sucesso, main="Projeção e reta estimada", xlab="Maravilha*Ciência", ylab="Sucesso")
-abline(a=0.289902, b=-0.006637, col="red")
+# Plotar a interação adicionada (exemplo)
+interaction_var <- data$Maravilha * data$Ciência  # Supondo que Maravilha e Ciência foram as variáveis de interação
+plot(interaction_var, data$Sucesso, main = "Projeção e reta estimada", xlab = "Maravilha*Ciência", ylab = "Sucesso")
+abline(a = coef(final_model)[1], b = coef(final_model)["Maravilha:Ciência"], col = "red")
+
