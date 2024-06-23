@@ -33,3 +33,11 @@ for (i in seq_along(var)) {
     }
   }
 }
+
+
+library(corrplot)
+# Supondo que 'data' seja seu dataframe com as variáveis numéricas
+cor_matrix <- cor(data[1:8], use="complete.obs")
+print(cor_matrix)
+corrplot(cor_matrix, method="color", addCoef.col="black", tl.col="black", tl.srt=45, 
+         title="Matriz de Correlação", mar=c(0,0,1,0))
