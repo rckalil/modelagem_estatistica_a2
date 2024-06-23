@@ -8,7 +8,6 @@ summary(data)
 
 # Se a variável dependente 'Sucesso' não for binária, você pode precisar transformá-la. Supondo que 'Sucesso' é binária (0 ou 1)
 data$Sucesso <- as.factor(data$Sucesso)  # Certificar que é um fator binário
-data$Exército <-as.factor(data$Exército)
 
 # Criar a fórmula para o modelo inicial
 formula <- as.formula(paste("Sucesso ~", paste(var[1:8], collapse = " + ")))

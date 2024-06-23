@@ -3,10 +3,19 @@ setwd("/home/kalil/Documents/Graduacao/FGV/ME")
 data <- read.csv("seven_wonders_duel.csv")
 var <- colnames(data)
 
+# Verificar o resumo dos dados
 summary(data)
+
+# Se a variável dependente 'Sucesso' não for binária, você pode precisar transformá-la. Supondo que 'Sucesso' é binária (0 ou 1)
+data$Sucesso <- as.factor(data$Sucesso)  # Certificar que é um fator binário
+data$Exército <- as.factor(data$Exército)
+
+# Criar a fórmula para o modelo inicial
 formula <- as.formula(paste("Sucesso ~", paste(var[1:8], collapse = " + ")))
 print(formula)
-t_model <- glm(formula, data=data)
+
+# Ajustar o modelo inicial
+t_model <- glm(formula, data = data, family = binomial)
 summary(t_model)
 
 # Inicializar lista para armazenar os valores de AIC
@@ -16,7 +25,7 @@ aic_values <- list()
 for (i in seq_along(var)) {
   if (var[i] != "Sucesso") {  # Excluir a variável resposta
     formula <- as.formula(paste("Sucesso ~", var[i]))
-    model <- glm(formula, data=data)
+    model <- glm(formula, data = data, family = binomial)
     aic_values[[var[i]]] <- AIC(model)
   }
 }
@@ -35,7 +44,7 @@ update_aic <- function(selected_vars, var) {
   for (i in seq_along(var)) {
     if (!(var[i] %in% c("Sucesso", selected_vars))) {  # Excluir a variável resposta e as variáveis já selecionadas
       formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "), "+", var[i]))
-      model <- glm(formula, data=data)
+      model <- glm(formula, data = data, family = binomial)
       aic_values[[var[i]]] <- AIC(model)
     }
   }
@@ -53,7 +62,7 @@ while (improvement) {
   
   best_var <- names(which.min(aic_values))
   
-  if (length(selected_vars) == 1 || AIC(glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data=data)) > aic_values[[best_var]]) {
+  if (length(selected_vars) == 1 || AIC(glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data = data, family = binomial)) > aic_values[[best_var]]) {
     selected_vars <- c(selected_vars, best_var)
     print(selected_vars)
   } else {
@@ -65,23 +74,11 @@ while (improvement) {
 print("Variáveis selecionadas para o modelo final:")
 print(selected_vars)
 
-first_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data=data)
+first_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data = data, family = binomial)
 summary(first_model)
-
-plot(data$Guilda, data$Sucesso, main="Projeção e reta estimada", xlab="Guilda", ylab="Sucesso")
-abline(a=0.008621, b=0.028619, col="red")
-
-plot(data$Dinheiro, data$Sucesso, main="Projeção e reta estimada", xlab="Dinheiro", ylab="Sucesso")
-abline(a=0.008621, b=0.025991, col="red")
-
-plot(data$Maravilha, data$Sucesso, main="Projeção e reta estimada", xlab="Maravilha", ylab="Sucesso")
-abline(a=0.008621, b=0.027930, col="red")
-
-plot(data$Exército, data$Sucesso, main="Projeção e reta estimada", xlab="Exército", ylab="Sucesso")
-abline(a=0.008621, b=-0.023385, col="red")
-
-plot(data$Comércio, data$Sucesso, main="Projeção e reta estimada", xlab="Comércio", ylab="Sucesso")
-abline(a=0.008621, b=-0.018250, col="red")
 
 # Salvar as variáveis selecionadas em um arquivo CSV
 write.csv(data.frame(Variaveis = selected_vars), "variaveis_selecionadas.csv", row.names = FALSE)
+
+# Exibir o modelo final
+summary(first_model)

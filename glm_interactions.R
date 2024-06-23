@@ -12,6 +12,8 @@ selected_vars <- as.vector(variaveis_selecionadas$Variaveis)
 
 # Certificar que a variável dependente é binária
 data$Sucesso <- as.factor(data$Sucesso)
+#Descomenmte a linha abaixo se quiser considerar Exército uma variável hierárquica
+#data$Exército <- as.factor(data$Exército)
 
 # Exibir as variáveis selecionadas
 print("Variáveis selecionadas para o modelo final:")
@@ -72,9 +74,3 @@ print(interaction_formula)
 
 # Salvar as variáveis selecionadas e interações em um arquivo CSV
 write.csv(data.frame(Variaveis = new_vars), "variaveis_selecionadas_com_interacoes.csv", row.names = FALSE)
-
-# Plotar a interação adicionada (exemplo)
-interaction_var <- data$Maravilha * data$Ciência  # Supondo que Maravilha e Ciência foram as variáveis de interação
-plot(interaction_var, data$Sucesso, main = "Projeção e reta estimada", xlab = "Maravilha*Ciência", ylab = "Sucesso")
-abline(a = coef(final_model)[1], b = coef(final_model)["Maravilha:Ciência"], col = "red")
-
