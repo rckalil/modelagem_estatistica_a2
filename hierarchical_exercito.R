@@ -38,6 +38,12 @@ print(x_1)
 # Lista de variáveis selecionadas
 selected_vars <- c(x_1)
 
+AICc <- function(model) {
+  k <- length(coefficients(model))
+  n <- length(data$Sucesso)
+  AIC(model) + 2 * k * (k + 1) / (n - k - 1)
+}
+
 # Função para atualizar o modelo e calcular o AIC
 update_aic <- function(selected_vars, var) {
   aic_values <- list()
@@ -45,7 +51,7 @@ update_aic <- function(selected_vars, var) {
     if (!(var[i] %in% c("Sucesso", selected_vars))) {  # Excluir a variável resposta e as variáveis já selecionadas
       formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "), "+", var[i]))
       model <- glm(formula, data = data, family = binomial)
-      aic_values[[var[i]]] <- AIC(model)
+      aic_values[[var[i]]] <- AICc(model)
     }
   }
   return(aic_values)
@@ -82,3 +88,5 @@ write.csv(data.frame(Variaveis = selected_vars), "variaveis_selecionadas.csv", r
 
 # Exibir o modelo final
 summary(first_model)
+print("AICc do modelo: ")
+print(AICc(first_model))

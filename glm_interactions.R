@@ -13,7 +13,7 @@ selected_vars <- as.vector(variaveis_selecionadas$Variaveis)
 # Certificar que a variável dependente é binária
 data$Sucesso <- as.factor(data$Sucesso)
 #Descomenmte a linha abaixo se quiser considerar Exército uma variável hierárquica
-#data$Exército <- as.factor(data$Exército)
+data$Exército <- as.factor(data$Exército)
 
 # Exibir as variáveis selecionadas
 print("Variáveis selecionadas para o modelo final:")
@@ -23,6 +23,12 @@ print(selected_vars)
 final_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data = data, family = binomial)
 summary(final_model)
 
+AICc <- function(model) {
+  k <- length(coefficients(model))
+  n <- length(data$Sucesso)
+  AIC(model) + 2 * k * (k + 1) / (n - k - 1)
+}
+
 # Função para avaliar interações e retornar o AIC
 evaluate_interactions <- function(selected_vars, var_index, allowed_vars) {
   aic_values <- list()
@@ -31,7 +37,7 @@ evaluate_interactions <- function(selected_vars, var_index, allowed_vars) {
     if (!(allowed_vars[i] %in% selected_vars)) {  # Garantir que a variável não seja considerada em selected_vars
       formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "), "+", var, "*", allowed_vars[i]))
       model <- glm(formula, data = data, family = binomial)
-      aic_values[[allowed_vars[i]]] <- AIC(model)
+      aic_values[[allowed_vars[i]]] <- AICc(model)
     }
   }
   formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + ")))
@@ -76,4 +82,9 @@ summary(final_model)
 print(interaction_formula)
 
 # Salvar as variáveis selecionadas e interações em um arquivo CSV
-write.csv(data.frame(Variaveis = new_vars), "variaveis_selecionadas_com_interacoes.csv", row.names = FALSE)
+write.csv(data.frame(Variaveis = selected_vars), "variaveis_selecionadas_com_interacoes.csv", row.names = FALSE)
+
+# Exibir o modelo final
+summary(final_model)
+print("AICc do modelo: ")
+print(AICc(final_model))
