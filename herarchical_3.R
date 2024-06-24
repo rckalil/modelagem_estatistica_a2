@@ -8,10 +8,11 @@ summary(data)
 
 # Se a variável dependente 'Sucesso' não for binária, você pode precisar transformá-la. Supondo que 'Sucesso' é binária (0 ou 1)
 data$Sucesso <- as.factor(data$Sucesso)  # Certificar que é um fator binário
-data$Exército <- as.factor(data$Exército)
+#data$Exército <- as.factor(data$Exército)  # Certificar que é um fator
+data$Jogo <- as.factor(data$Jogo)
 
 # Criar a fórmula para o modelo inicial
-formula <- as.formula(paste("Sucesso ~", paste(var[1:8], collapse = " + ")))
+formula <- as.formula(paste("Sucesso ~", paste(var[-9], collapse = " + ")))
 print(formula)
 
 # Ajustar o modelo inicial
@@ -70,15 +71,19 @@ while (improvement) {
   }
 }
 
-# Resultado final
-print("Variáveis selecionadas para o modelo final:")
-print(selected_vars)
+# Criar a fórmula com interações entre 'Exército' e as variáveis selecionadas
+#interaction_terms <- paste("Exército *", selected_vars, collapse = " + ")
+#interaction_terms_2 <- paste("Jogo *", selected_vars, collapse = " +")
+terms <- paste(c(selected_vars, "Jogo"), collapse = "+")
+final_formula <- as.formula(paste("Sucesso ~", terms))
+print(final_formula)
 
-first_model <- glm(as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "))), data = data, family = binomial)
-summary(first_model)
+# Ajustar o modelo final com interações
+final_model <- glm(final_formula, data = data, family = binomial)
+summary(final_model)
 
-# Salvar as variáveis selecionadas em um arquivo CSV
-write.csv(data.frame(Variaveis = selected_vars), "variaveis_selecionadas.csv", row.names = FALSE)
+# Salvar as variáveis selecionadas e interações em um arquivo CSV
+write.csv(data.frame(Variaveis = selected_vars), "variaveis_selecionadas_com_interacoes.csv", row.names = FALSE)
 
 # Exibir o modelo final
-summary(first_model)
+summary(final_model)

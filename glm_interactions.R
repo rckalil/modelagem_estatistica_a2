@@ -1,5 +1,5 @@
 # Configurar o diretório de trabalho e carregar os dados
-setwd("/home/kalil/Documents/Graduacao/FGV/ME")
+setwd("/home/kalil/Documents/Graduacao/FGV/ME/modelagem_estatistica_a2")
 data <- read.csv("seven_wonders_duel.csv")
 var <- colnames(data)
 allowed_vars = var[1:8]
@@ -29,11 +29,14 @@ evaluate_interactions <- function(selected_vars, var_index, allowed_vars) {
   var <- selected_vars[var_index]
   for (i in seq_along(allowed_vars)) {
     if (!(allowed_vars[i] %in% selected_vars)) {  # Garantir que a variável não seja considerada em selected_vars
-      formula <- as.formula(paste("Sucesso ~", paste(selected_vars[-var_index], collapse = " + "), "+", var, "*", allowed_vars[i]))
+      formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + "), "+", var, "*", allowed_vars[i]))
       model <- glm(formula, data = data, family = binomial)
       aic_values[[allowed_vars[i]]] <- AIC(model)
     }
   }
+  formula <- as.formula(paste("Sucesso ~", paste(selected_vars, collapse = " + ")))
+  model <- glm(formula, data = data, family = binomial)
+  aic_values[[var]] <- AIC(model)    # Adicionar o AIC do modelo sem interações
   return(aic_values)
 }
 
